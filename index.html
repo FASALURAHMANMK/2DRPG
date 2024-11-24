@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Pals Adventure</title>
+    <link href="style.css" rel="stylesheet">
+    <title>2D RPG</title>
     <style>
         body {
             margin: 0;
@@ -12,125 +13,54 @@
     </style>
 </head>
 <body>
+    <div id="auth-container">
+        <h3 id="auth-title">Login</h3>
+        <form id="auth-form">
+            <input type="text" id="username" placeholder="Username" required />
+            <input type="password" id="password" placeholder="Password" required />
+            <button type="submit">Submit</button>
+        </form>
+        <p id="toggle-auth">Don't have an account? <span>Sign up</span></p>
+    </div>
+    <canvas id="gameCanvas" style="display: none;"></canvas>    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
-    <script>   
-        class BootScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'BootScene' });
-            }
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="Game.js"></script>
+    <script>
+        let playerData = null;
 
-            preload() {
-				this.load.image('map', 'assets/images/map.png');
-                this.load.spritesheet('pet', 'assets/images/pet.png', { frameWidth: 32, frameHeight: 32 });
-				this.load.spritesheet('treat', 'assets/images/treat.png', { frameWidth: 32, frameHeight: 32 });
-            }
+document.getElementById('auth-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
 
-            create() {
-			this.anims.create({
-            key: 'treatAnim',
-            frames: this.anims.generateFrameNumbers('treat', { start: 0, end: 3 }),
-            frameRate: 6,
-            repeat: -1
+    const isSignup = document.getElementById('auth-title').textContent === 'Sign Up';
+    const endpoint = isSignup ? '/signup' : '/login';
+    try {
+        const response = await fetch(`http://localhost:3008${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
         });
-                this.scene.start('GameScene');
-            }
+
+        if (response.ok) {
+            playerData = await response.json();
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'block';
+            startGame();
+        } else {
+            alert(await response.text());
         }
-
-        class GameScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'GameScene' });
-            }
-
-            create() {
-   
-    this.add.tileSprite(400, 300, 800, 600, 'map');
-
-	
-    
-    this.player = this.physics.add.sprite(100, 100, 'pet').setScale(2);
-    this.player.setCollideWorldBounds(true);
-	
-    this.treats = this.physics.add.group();
-    for (let i = 0; i < 10; i++) {
-        const x = Phaser.Math.Between(50, 750);
-        const y = Phaser.Math.Between(50, 550);
-        const treat = this.treats.create(x, y, 'treat');
-        treat.setCollideWorldBounds(true);
-		treat.anims.play('treatAnim');
+    } catch (error) {
+        console.error('Error:', error);
     }
+});
 
-    this.physics.add.overlap(this.player, this.treats, this.collectTreat, null, this);
-
-    this.cursors = this.input.keyboard.createCursorKeys();
-}
-
-            update() {
-                this.player.setVelocity(0);
-
-                if (this.cursors.left.isDown) {
-                    this.player.setVelocityX(-150);
-                } else if (this.cursors.right.isDown) {
-                    this.player.setVelocityX(150);
-                }
-
-                if (this.cursors.up.isDown) {
-                    this.player.setVelocityY(-150);
-                } else if (this.cursors.down.isDown) {
-                    this.player.setVelocityY(150);
-                }
-            }
-
-            collectTreat(player, treat) {
-                treat.disableBody(true, true);
-                playerStats.treats += 1;
-
-                if (this.treats.countActive(true) === 0) {
-                    this.scene.start('BattleScene', { playerStats });
-                }
-            }
-        }
-
-        class BattleScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'BattleScene' });
-            }
-
-            create(data) {
-                this.add.text(100, 100, `Battle Time!`, { fontSize: '32px', color: '#fff' });
-
-                this.add.text(100, 150, `HP: ${data.playerStats.hp}`, { fontSize: '24px', color: '#fff' });
-                this.add.text(100, 180, `Level: ${data.playerStats.level}`, { fontSize: '24px', color: '#fff' });
-                this.add.text(100, 210, `Treats Collected: ${data.playerStats.treats}`, { fontSize: '24px', color: '#fff' });
-
-                this.add.text(100, 300, `Press SPACE to return`, { fontSize: '24px', color: '#fff' });
-
-                this.input.keyboard.once('keydown-SPACE', () => {
-                    this.scene.start('GameScene');
-                });
-            }
-        }
-		const config = {
-            type: Phaser.AUTO,
-            width: 800,
-            height: 600,
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 0 },
-                    debug: false
-                }
-            },
-            scene: [BootScene, GameScene, BattleScene]
-        };
-
-        const playerStats = {
-            hp: 100,
-            level: 1,
-            xp: 0,
-            treats: 0
-        };
-
-        new Phaser.Game(config);
+document.getElementById('toggle-auth').addEventListener('click', () => {
+    const isLogin = document.getElementById('auth-title').textContent === 'Login';
+    document.getElementById('auth-title').textContent = isLogin ? 'Sign Up' : 'Login';
+});
     </script>
+
 </body>
 </html>
