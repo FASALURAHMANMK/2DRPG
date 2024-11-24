@@ -96,17 +96,27 @@ class GameScene extends Phaser.Scene {
 
     // Update other players' positions and the scoreboard
     updatePlayers(players) {
+        // Clear existing sprites and texts for other players
         this.otherPlayers.clear(true, true);
-
+    
         Object.values(players).forEach(player => {
             if (player.username !== playerData.username) {
-                // Add other players' sprites
-                const otherPlayerSprite = this.add.sprite(player.x, player.y, 'pet').setScale(2);
-                this.add.text(player.x, player.y - 30, player.username, { fontSize: '12px', color: '#fff' });
-                this.otherPlayers.add(otherPlayerSprite);
+                // Create a container for the sprite and username text
+                const playerSprite = this.add.sprite(0, 0, 'pet').setScale(2);
+                const usernameText = this.add.text(0, -40, player.username, {
+                    fontSize: '12px',
+                    color: '#fff',
+                    align: 'center',
+                }).setOrigin(0.5); // Center the text
+    
+                // Group them in a container
+                const playerContainer = this.add.container(player.x, player.y, [playerSprite, usernameText]);
+    
+                // Add to the `otherPlayers` group for easy cleanup
+                this.otherPlayers.add(playerContainer);
             }
         });
-
+    
         // Update the live scoreboard
         const scores = Object.values(players)
             .map(player => `${player.username}: ${player.score}`)
