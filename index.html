@@ -20,7 +20,7 @@
             }
 
             preload() {
-				this.load.image('map', 'assets/images/map.png'); // Placeholder map
+				this.load.image('map', 'assets/images/map.png');
                 this.load.spritesheet('pet', 'assets/images/pet.png', { frameWidth: 32, frameHeight: 32 });
 				this.load.spritesheet('treat', 'assets/images/treat.png', { frameWidth: 32, frameHeight: 32 });
             }
@@ -28,9 +28,9 @@
             create() {
 			this.anims.create({
             key: 'treatAnim',
-            frames: this.anims.generateFrameNumbers('treat', { start: 0, end: 3 }), // Adjust frame range to match your sprite sheet
+            frames: this.anims.generateFrameNumbers('treat', { start: 0, end: 3 }),
             frameRate: 6,
-            repeat: -1 // Loop infinitely
+            repeat: -1
         });
                 this.scene.start('GameScene');
             }
@@ -42,21 +42,18 @@
             }
 
             create() {
-    // Add the map
+   
     this.add.tileSprite(400, 300, 800, 600, 'map');
 
 	
-    // Add the player's pet
+    
     this.player = this.physics.add.sprite(100, 100, 'pet').setScale(2);
     this.player.setCollideWorldBounds(true);
 	
-	//const animatedtreat = this.add.sprite(x, y, 'treat');
-	
-    // Scatter treats randomly
     this.treats = this.physics.add.group();
     for (let i = 0; i < 10; i++) {
-        const x = Phaser.Math.Between(50, 750); // Random x within game bounds
-        const y = Phaser.Math.Between(50, 550); // Random y within game bounds
+        const x = Phaser.Math.Between(50, 750);
+        const y = Phaser.Math.Between(50, 550);
         const treat = this.treats.create(x, y, 'treat');
         treat.setCollideWorldBounds(true);
 		treat.anims.play('treatAnim');
@@ -64,7 +61,6 @@
 
     this.physics.add.overlap(this.player, this.treats, this.collectTreat, null, this);
 
-    // Controls
     this.cursors = this.input.keyboard.createCursorKeys();
 }
 
@@ -102,7 +98,6 @@
             create(data) {
                 this.add.text(100, 100, `Battle Time!`, { fontSize: '32px', color: '#fff' });
 
-                // Show player stats
                 this.add.text(100, 150, `HP: ${data.playerStats.hp}`, { fontSize: '24px', color: '#fff' });
                 this.add.text(100, 180, `Level: ${data.playerStats.level}`, { fontSize: '24px', color: '#fff' });
                 this.add.text(100, 210, `Treats Collected: ${data.playerStats.treats}`, { fontSize: '24px', color: '#fff' });
