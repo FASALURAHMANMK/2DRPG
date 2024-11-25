@@ -5,12 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="style.css" rel="stylesheet">
     <title>2D RPG</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
 </head>
 <body>
     <div id="auth-container">
@@ -22,44 +16,45 @@
         </form>
         <p id="toggle-auth">Don't have an account? <span>Sign up</span></p>
     </div>
-    <canvas id="gameCanvas" style="display: none;"></canvas>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script src="Game.js"></script>
     <script>
         let playerData = null;
-
-document.getElementById('auth-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    const isSignup = document.getElementById('auth-title').textContent === 'Sign Up';
-    const endpoint = isSignup ? '/signup' : '/login';
-    try {
-        const response = await fetch(`http://localhost:3008${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+    
+        // Handle login or signup
+        document.getElementById('auth-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+    
+            const isSignup = document.getElementById('auth-title').textContent === 'Sign Up';
+            const endpoint = isSignup ? '/signup' : '/login';
+    
+            try {
+                const response = await fetch(`http://localhost:3008${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+    
+                if (response.ok) {
+                    playerData = await response.json();
+                    document.getElementById('auth-container').style.display = 'none';
+                    startGame(); // Start the game after login
+                } else {
+                    alert(await response.text());
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
         });
-
-        if (response.ok) {
-            playerData = await response.json();
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('gameCanvas').style.display = 'block';
-            startGame();
-        } else {
-            alert(await response.text());
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-});
-
-document.getElementById('toggle-auth').addEventListener('click', () => {
-    const isLogin = document.getElementById('auth-title').textContent === 'Login';
-    document.getElementById('auth-title').textContent = isLogin ? 'Sign Up' : 'Login';
-});
+    
+        // Toggle between login and signup
+        document.getElementById('toggle-auth').addEventListener('click', () => {
+            const isLogin = document.getElementById('auth-title').textContent === 'Login';
+            document.getElementById('auth-title').textContent = isLogin ? 'Sign Up' : 'Login';
+        });
     </script>
 
 </body>
