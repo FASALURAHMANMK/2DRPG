@@ -1,5 +1,4 @@
 const socket = io('http://localhost:3008'); // Single global socket connection
-
 // BootScene
 class BootScene extends Phaser.Scene {
     constructor() {
@@ -21,7 +20,6 @@ class BootScene extends Phaser.Scene {
             frameRate: 6,
             repeat: -1,
         });
-
         // Start the room selection scene
         this.scene.start('RoomSelectionScene');
     }
@@ -38,29 +36,25 @@ class RoomSelectionScene extends Phaser.Scene {
         this.socket = this.game.socket;
 
         // Add UI elements
-        const createButton = this.add.text(200, 150, 'Create Room', {
+        const createButton = this.add.text(250, 150, 'Create Room', {
             fontSize: '32px',
             color: '#fff',
+            fontStyle: 'bold',
         }).setInteractive();
 
-        const joinButton = this.add.text(200, 250, 'Join Room', {
-            fontSize: '32px',
+        const joinButton = this.add.text(230, 220, 'Availabe Rooms:', {
+            fontSize: '28px',
             color: '#fff',
-        }).setInteractive();
+        });
 
         // Handle Create Room button click
         createButton.on('pointerdown', () => {
             this.socket.emit('createRoom', { username: playerData.username });
         });
 
-        // Handle Join Room button click
-        joinButton.on('pointerdown', () => {
-            this.socket.emit('getRoomList');
-        });
-
         // Listen for room creation success
         this.socket.on('roomCreated', ({ roomId }) => {
-            this.add.text(200, 350, `Room Created: ${roomId}`, {
+            this.add.text(180, 190, `Room Created: ${roomId}`, {
                 fontSize: '24px',
                 color: '#fff',
             });
@@ -69,14 +63,9 @@ class RoomSelectionScene extends Phaser.Scene {
 
         // Listen for updated room list
         this.socket.on('updateRoomList', rooms => {
-            let y = 300;
-            this.add.text(200, y - 30, 'Available Rooms:', {
-                fontSize: '24px',
-                color: '#fff',
-            });
-
+            let y = 260;
             for (const roomId in rooms) {
-                const roomButton = this.add.text(200, y, `Join ${roomId}`, {
+                const roomButton = this.add.text(230, y, `Join ${roomId}`, {
                     fontSize: '24px',
                     color: '#fff',
                 }).setInteractive();
@@ -85,7 +74,7 @@ class RoomSelectionScene extends Phaser.Scene {
                     this.socket.emit('joinRoom', { roomId, username: playerData.username });
                 });
 
-                y += 50;
+                y += 30;
             }
         });
 
@@ -96,14 +85,14 @@ class RoomSelectionScene extends Phaser.Scene {
     }
 
     waitForPlayers(roomId) {
-        const waitingText = this.add.text(200, 400, 'Waiting for players...', {
+        const waitingText = this.add.text(210, 500, 'Waiting for players...', {
             fontSize: '24px',
             color: '#fff',
         });
 
         this.socket.on('playerJoined', ({ username }) => {
             waitingText.setText(`Player Joined: ${username}`);
-            const startButton = this.add.text(200, 450, 'Start Game', {
+            const startButton = this.add.text(270, 450, 'Start Game', {
                 fontSize: '24px',
                 color: '#fff',
             }).setInteractive();
@@ -113,6 +102,7 @@ class RoomSelectionScene extends Phaser.Scene {
             });
         });
     }
+    
 }
 
 // GameScene
@@ -173,31 +163,36 @@ class GameScene extends Phaser.Scene {
 
         // Handle game over
         this.socket.on('gameOver', ({ winners }) => {
-            // Clear existing input listeners
-        
             // Display game status
             const message =
                 winners.length > 1
                     ? `Game Over: It's a draw between ${winners.join(', ')}!`
                     : `Game Over: Winner is ${winners[0]}!`;
-        
-            const gameOverText = this.add.text(200, 300, message, {
-                fontSize: '32px',
+                    const background = this.add.graphics(0, 0);
+
+                    // Set background size to cover the entire screen
+                    const width = this.cameras.main.width;
+                    const height = this.cameras.main.height;
+                    background.fillStyle(0x000000, 0.4); // Black color with 30% transparency
+                    background.fillRect(0, 0, width, height);
+            const gameOverText = this.add.text(115, 270, message, {
+                fontSize: '36px',
                 color: '#fff',
+                fontStyle: 'bold',
             });
-        
-            const replayText = this.add.text(200, 350, 'Press SPACE to replay', {
+            gameOverText.setDepth(1);
+            const replayText = this.add.text(230, 320, 'Press SPACE to reset', {
                 fontSize: '24px',
                 color: '#fff',
             });
-        
-            // Listen for SPACE key to restart
-            this.input.keyboard.once('keydown-SPACE', () => {
-                // Notify server and restart the scene
-                this.socket.emit('replayGame', { roomId: this.roomId });
-                this.scene.start('RoomSelectionScene'); // Go back to room selection
+            replayText.setDepth(1);
+            // Add SPACE key listener for resetting
+            const spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+            spaceKey.once('down', () => {
+                this.socket.emit('resetGame');
+                window.location.reload();
             });
-        });
+        }); 
         
     }
 
@@ -251,7 +246,7 @@ class GameScene extends Phaser.Scene {
         const index = treat.getData('index');
         treat.disableBody(true, true);
         this.socket.emit('collectTreat', index);
-    }
+    }   
 }
 
 // Phaser game configuration

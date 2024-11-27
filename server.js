@@ -1,25 +1,35 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const mysql = require('mysql');
+const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'phaser_game',
+const db = new sqlite3.Database('./game.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, err => {
+    if (err) {
+        console.error('Failed to connect to SQLite database:', err.message);
+    } else {
+        console.log('Connected to SQLite database');
+    }
 });
-
-db.connect(err => {
-    if (err) throw err;
-    console.log('Connected to MySQL');
+db.serialize(() => {
+    db.run(
+        `CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            points INTEGER DEFAULT 0
+        )`,
+        err => {
+            if (err) {
+                console.error('Error creating table:', err.message);
+            }
+        }
+    );
 });
-
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
@@ -28,10 +38,11 @@ app.use(express.static('public'));
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     const query = 'SELECT * FROM users WHERE username = ? AND password = ?';
-    db.query(query, [username, password], (err, results) => {
-        if (err) return res.status(500).send(err);
-        if (results.length > 0) {
-            res.status(200).json(results[0]);
+    db.get(query, [username, password], (err, row) => {
+        if (err) {
+            res.status(500).send(err.message);
+        } else if (row) {
+            res.status(200).json(row);
         } else {
             res.status(401).send('Invalid credentials');
         }
@@ -41,12 +52,14 @@ app.post('/login', (req, res) => {
 app.post('/signup', (req, res) => {
     const { username, password } = req.body;
     const query = 'INSERT INTO users (username, password, points) VALUES (?, ?, 0)';
-    db.query(query, [username, password], err => {
-        if (err && err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).send('Username already exists');
+    db.run(query, [username, password], function (err) {
+        if (err && err.code === 'SQLITE_CONSTRAINT') {
+            res.status(409).send('Username already exists');
+        } else if (err) {
+            res.status(500).send(err.message);
+        } else {
+            res.status(201).send('User registered');
         }
-        if (err) return res.status(500).send(err);
-        res.status(201).send('User registered');
     });
 });
 
@@ -89,6 +102,22 @@ function initializeTreats() {
         treats.push({ x, y, collected: false });
     }
 }
+function initializeRoomTreats(roomId) {
+    rooms[roomId].treats = [];
+    for (let i = 0; i < 10; i++) {
+        const x = Math.floor(Math.random() * 700) + 50;
+        const y = Math.floor(Math.random() * 500) + 50;
+        rooms[roomId].treats.push({ x, y, collected: false });
+    }
+}
+function resetPlayerScores(roomId) {
+    rooms[roomId].players.forEach(playerId => {
+        if (players[playerId]) {
+            players[playerId].score = 0;
+        }
+    });
+}
+
 
 // Add more treats when a new user joins
 function addTreats(numTreats = 5) {
@@ -130,14 +159,6 @@ io.on('connection', socket => {
             io.emit('updateRoomList', rooms); // Remove from public list
         }
     });
-    socket.on('replayGame', ({ roomId }) => {
-        if (rooms[roomId]) {
-            rooms[roomId].isActive = false;
-            io.to(roomId).emit('replayGame', { roomId });
-            io.emit('updateRoomList', rooms); // Add to public list
-        }
-    });
-
     // Handle player join
     socket.on('playerJoin', playerData => {
         players[socket.id] = playerData;
@@ -154,7 +175,7 @@ io.on('connection', socket => {
             io.emit('updatePlayers', players);
         }
     });
-
+    
     // Handle treat collection
     socket.on('collectTreat', index => {
         if (!treats[index].collected && players[socket.id]) {
@@ -180,12 +201,22 @@ io.on('connection', socket => {
     });
     
     socket.on('resetGame', () => {
-        players = {}; // Clear all player data
-        initializeTreats(); // Reset treats
-        io.emit('treatsData', treats); // Send updated treats
-        io.emit('updatePlayers', players); // Send cleared player data
+        const roomId = players[socket.id]?.roomId;
+        if (roomId && rooms[roomId]) {
+            rooms[roomId].isActive = false; // Reset room to inactive state
+            initializeRoomTreats(roomId); // Reset treats
+            resetPlayerScores(roomId); // Reset player scores
+            io.to(roomId).emit('resetGame'); // Notify clients to reset
+        } else {
+            // Global reset if no specific room is found
+            players = {};
+            treats = [];
+            rooms = {};
+            io.emit('resetGame'); // Notify all clients
+        }
+        console.log('Game state fully reset');
     });
-    
+       
     socket.on('disconnect', () => {
         const roomId = players[socket.id]?.roomId;
         if (roomId && rooms[roomId]) {
@@ -200,6 +231,7 @@ io.on('connection', socket => {
         delete players[socket.id];
         io.emit('updateRoomList', rooms); // Broadcast updated room list
     });
+    
     
 });
 
