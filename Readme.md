@@ -30,11 +30,17 @@ Installation:
 Usage
 
 -Login with the default accounts([user1:1234],[user2:1234]) or use sign up to create your own.
+
 -After login create a game room
+
 -You can join room from there itself(Single Player) or join from another logged in user. Then start the game.
+
 -Navigate using arrow keys
+
 -The aim is to collect more coins
+
 -The game ends when the coins are finished and the winner is who with more coins.
+
 -Press "Space" to restart the game.
 
 File Structure
