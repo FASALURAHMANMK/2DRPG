@@ -4,9 +4,9 @@ A browser-based 2D RPG game featuring exploration, combat, and an engaging story
 
 Prerequisites:
 
-Node.js (v14 or higher)
-SQLite3
-A modern web browser (Chrome, Firefox, etc.)
+-Node.js (v14 or higher)
+-SQLite3
+-A web browser (Chrome, Firefox, etc.)
 
 Installation:
 
@@ -23,11 +23,12 @@ Installation:
                       npm install
 4.Start the server:
 
-node server.js
+                      node server.js
 
 5.Open the game in your browser at http://localhost:3008.
 
 Usage
+
 -Login with the default accounts([user1:1234],[user2:1234]) or use sign up to create your own.
 -After login create a game room
 -You can join room from there itself(Single Player) or join from another logged in user. Then start the game.
