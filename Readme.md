@@ -41,11 +41,9 @@ Usage
 
 -You can join room from there itself(Single Player) or join from another logged in user. Then start the game.
 
--Navigate using arrow keys
+-Navigate using arrow keys and collect coins
 
--The aim is to collect more coins
-
--The game ends when the coins are finished and the winner is who with more coins.
+-The game ends when all coins are collected and the winner is whom with more coins.
 
 -Press "Space" to restart the game.
 
@@ -55,9 +53,9 @@ File Structure
 
 Game.js: Core game logic.
 
-server.js: Backend server for handling data persistence.
+server.js: Backend server for handling realtime updates.
 
-game.db: SQLite database for saving game data.
+game.db: SQLite database for saving user data.
 
 License
 This project is licensed under the MIT License.
