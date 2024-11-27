@@ -5,7 +5,9 @@ A browser-based 2D RPG game featuring exploration, combat, and an engaging story
 Prerequisites:
 
 -Node.js (v14 or higher)
+
 -SQLite3
+
 -A web browser (Chrome, Firefox, etc.)
 
 Installation:
@@ -46,8 +48,11 @@ Usage
 File Structure
 
 /assets: Game sprites, tilesets.
+
 Game.js: Core game logic.
+
 server.js: Backend server for handling data persistence.
+
 game.db: SQLite database for saving game data.
 
 License
