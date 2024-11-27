@@ -33,7 +33,7 @@ Installation:
 
 6.Open the game in your browser at http://[Your ip or localhost]/2DRPG/
 
-Usage
+Usage:
 
 -Login with the default accounts([user1:1234],[user2:1234]) or use sign up to create your own.
 
@@ -47,7 +47,7 @@ Usage
 
 -Press "Space" to restart the game.
 
-File Structure
+File Structure:
 
 /assets: Game sprites, tilesets.
 
@@ -57,6 +57,7 @@ server.js: Backend server for handling realtime updates.
 
 game.db: SQLite database for saving user data.
 
-License
+License:
+
 This project is licensed under the MIT License.
 *********************************************************************************************************************************
