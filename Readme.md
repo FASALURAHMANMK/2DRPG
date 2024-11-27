@@ -6,6 +6,8 @@ Prerequisites:
 
 -Node.js (v14 or higher)
 
+-HTTP Server(Apache,Nginx etc)
+
 -SQLite3
 
 -A web browser (Chrome, Firefox, etc.)
@@ -16,18 +18,20 @@ Installation:
 
                       git clone https://github.com/FASALURAHMANMK/2DRPG.git
 
-2.Navigate to the project directory:
+2.Move "2DRPG" folder to the http server root folder (ie. "htdocs")
+
+3.Navigate to the project directory:
 
                       cd 2DRPG
 
-3.Install dependencies:
+4.Install dependencies:
  
                       npm install
-4.Start the server:
+5.Start the server:
 
                       node server.js
 
-5.Open the game in your browser at http://localhost:3008.
+6.Open the game in your browser at http://[Your ip or localhost]/2DRPG/
 
 Usage
 
